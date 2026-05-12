@@ -28,7 +28,7 @@
 
 
 ## 🛠 주요 기술 스택 (데이터 파이프라인)
-언어: Python 3
+사용 언어: Python 3, SQL
 1. 웹 크롤링: requests, BeautifulSoup (웹 데이터 수집 및 파싱)
 2. 데이터 가공: pandas (수집된 데이터 정제 및 DB 형태에 맞게 변환)
 3. DB : PostgreSQL, SQLAlchemy (데이터 최종 저장 및 연동)
