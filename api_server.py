@@ -5,6 +5,8 @@ from flask_cors import CORS
 import os
 import sys
 import re
+import requests
+# pyrefly: ignore [missing-import]
 from apscheduler.schedulers.background import BackgroundScheduler
 
 # --- 경로 수정 ---
@@ -26,6 +28,8 @@ TELECOM_DATA_PATH = os.path.join(os.path.dirname(__file__), 'Telecom.csv')
 
 app = Flask(__name__)
 CORS(app)
+
+KAKAO_KEY = "28927acb4f3229bf2bddf11261cc6ff3"
 
 # --- 전역 변수 선언 ---
 crawling_data = []
@@ -278,6 +282,44 @@ def search():
         return jsonify(result)
     except Exception as e:
         print(f"An error occurred during search: {e}")
+        return jsonify({"error": "서버 내부 오류가 발생했습니다."}), 500
+
+@app.route('/nearby_stores', methods=['GET'])
+def nearby_stores():
+    """사용자의 위도/경도를 받아 근처 편의점(GS25, CU) 목록을 반환하는 엔드포인트"""
+    try:
+        lat = request.args.get('lat')
+        lon = request.args.get('lon')
+        
+        if not lat or not lon:
+            return jsonify({"error": "위도(lat)와 경도(lon)가 필요합니다."}), 400
+            
+        url = "https://dapi.kakao.com/v2/local/search/category.json"
+        headers = {"Authorization": f"KakaoAK {KAKAO_KEY}"}
+        params = {
+            "category_group_code": "CS2", 
+            "x": lon, 
+            "y": lat, 
+            "radius": 1000,
+            "sort": "distance"
+        }
+        
+        res = requests.get(url, headers=headers, params=params)
+        
+        if res.status_code != 200:
+            return jsonify({"error": "카카오 API 요청에 실패했습니다."}), res.status_code
+            
+        documents = res.json().get('documents', [])
+        
+        # GS25와 CU만 필터링
+        filtered_docs = [
+            doc for doc in documents 
+            if "GS25" in doc.get("place_name", "").upper() or "CU" in doc.get("place_name", "").upper()
+        ]
+        
+        return jsonify(filtered_docs)
+    except Exception as e:
+        print(f"An error occurred during nearby_stores: {e}")
         return jsonify({"error": "서버 내부 오류가 발생했습니다."}), 500
 
 # --- if __name__ == '__main__': 블록은 로컬 테스트용으로만 사용 ---
