@@ -135,7 +135,9 @@ function sendMessage() {
     const userInfo = users[loggedInUser.id]?.survey || {};
 
     // 백엔드 API에 요청 보내기
-    fetch('http://127.0.0.1:5001/search', {
+    const serverUrl = 'https://time-2xjx.onrender.com/search'; 
+    
+    fetch(serverUrl, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

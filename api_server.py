@@ -7,48 +7,88 @@ import sys
 import re
 from apscheduler.schedulers.background import BackgroundScheduler
 
-# --- 다른 폴더의 파이썬/데이터 파일 경로 설정 ---
-sys.path.append(os.path.join(os.path.dirname(__file__), 'AI_Budget-Mate', 'crawling'))
-from crawling import crawl_convenience_store
+# --- 경로 수정 ---
+# 데이터 파일들이 api_server.py와 동일한 폴더에 있다고 가정합니다.
+# 'AI_Budget-Mate' 폴더 구조를 제거하고 경로를 단순화합니다.
+sys.path.append(os.path.dirname(__file__))
+try:
+    from crawling import crawl_convenience_store
+except ImportError:
+    # Render 환경에서는 crawling 모듈이 없을 수 있으므로 예외 처리
+    def crawl_convenience_store(store, max_pages):
+        print(f"Warning: 'crawling' module not found. Cannot crawl {store}.")
+        return []
 
-CRAWLING_RESULT_PATH = os.path.join('AI_Budget-Mate', 'crawling', 'crawling_result.json')
-CARD_DATA_PATH = os.path.join('AI_Budget-Mate', 'db_config', 'Card.csv')
-TELECOM_DATA_PATH = os.path.join('AI_Budget-Mate', 'db_config', 'Telecom.csv')
+CRAWLING_RESULT_PATH = os.path.join(os.path.dirname(__file__), 'crawling_result.json')
+CARD_DATA_PATH = os.path.join(os.path.dirname(__file__), 'Card.csv')
+TELECOM_DATA_PATH = os.path.join(os.path.dirname(__file__), 'Telecom.csv')
 # -------------------------------------------------
-
-def run_crawling_and_save():
-    """주기적으로 크롤링을 실행하고 결과를 JSON 파일에 저장하는 함수"""
-    print("===== 자동 크롤링 시작 =====")
-    all_data = []
-    gs25_data = crawl_convenience_store("GS25", max_pages=135)
-    all_data.extend(gs25_data)
-    cu_data = crawl_convenience_store("CU", max_pages=123)
-    all_data.extend(cu_data)
-    with open(CRAWLING_RESULT_PATH, 'w', encoding='utf-8') as f:
-        json.dump(all_data, f, ensure_ascii=False, indent=4)
-    print(f"✅ 자동 크롤링 완료! 총 {len(all_data)}개의 데이터가 저장되었습니다.")
-    global crawling_data, card_df, telecom_df
-    crawling_data, card_df, telecom_df = load_data()
 
 app = Flask(__name__)
 CORS(app)
 
+# --- 전역 변수 선언 ---
+crawling_data = []
+card_df = pd.DataFrame()
+telecom_df = pd.DataFrame()
+# --------------------
+
 def load_data():
-    """모든 데이터 소스를 로드하는 함수"""
+    """모든 데이터 소스를 로드하여 전역 변수를 업데이트하는 함수"""
+    global crawling_data, card_df, telecom_df
+    print("데이터 로드를 시작합니다...")
     try:
         with open(CRAWLING_RESULT_PATH, 'r', encoding='utf-8') as f:
             content = f.read()
             crawling_data = json.loads(content) if content else []
-    except (FileNotFoundError, json.JSONDecodeError): crawling_data = []
+        print(f"✅ 크롤링 데이터 로드 완료 ({len(crawling_data)}개 항목)")
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        crawling_data = []
+        print(f"⚠️ 크롤링 데이터 파일({CRAWLING_RESULT_PATH})을 찾을 수 없거나 파싱 오류가 발생했습니다: {e}")
+
     try:
         card_df = pd.read_csv(CARD_DATA_PATH)
-    except FileNotFoundError: card_df = pd.DataFrame()
+        print(f"✅ 카드 데이터 로드 완료 ({len(card_df)}개 행)")
+    except FileNotFoundError as e:
+        card_df = pd.DataFrame()
+        print(f"⚠️ 카드 데이터 파일({CARD_DATA_PATH})을 찾을 수 없습니다: {e}")
+
     try:
         telecom_df = pd.read_csv(TELECOM_DATA_PATH)
-    except FileNotFoundError: telecom_df = pd.DataFrame()
-    return crawling_data, card_df, telecom_df
+        print(f"✅ 통신사 데이터 로드 완료 ({len(telecom_df)}개 행)")
+    except FileNotFoundError as e:
+        telecom_df = pd.DataFrame()
+        print(f"⚠️ 통신사 데이터 파일({TELECOM_DATA_PATH})을 찾을 수 없습니다: {e}")
 
-crawling_data, card_df, telecom_df = load_data()
+def run_crawling_and_save():
+    """주기적으로 크롤링을 실행하고 결과를 JSON 파일에 저장하는 함수"""
+    print("===== 자동 크롤링 시작 =====")
+    try:
+        all_data = []
+        gs25_data = crawl_convenience_store("GS25", max_pages=135)
+        all_data.extend(gs25_data)
+        cu_data = crawl_convenience_store("CU", max_pages=123)
+        all_data.extend(cu_data)
+
+        # Render의 임시 파일 시스템에 저장
+        with open(CRAWLING_RESULT_PATH, 'w', encoding='utf-8') as f:
+            json.dump(all_data, f, ensure_ascii=False, indent=4)
+        
+        print(f"✅ 자동 크롤링 완료! 총 {len(all_data)}개의 데이터가 저장되었습니다.")
+        # 크롤링 후 즉시 메모리에 데이터를 다시 로드
+        load_data()
+    except Exception as e:
+        print(f"❌ 자동 크롤링 중 오류 발생: {e}")
+
+# --- 서버 시작 시 데이터 로드 및 스케줄러 설정 ---
+# Gunicorn이 앱을 임포트할 때 이 코드가 실행됩니다.
+load_data() # 서버 시작 시 데이터 즉시 로드
+
+scheduler = BackgroundScheduler(daemon=True)
+scheduler.add_job(run_crawling_and_save, 'interval', hours=6)
+scheduler.start()
+print("Flask 서버 설정 완료. 스케줄러가 시작되었습니다.")
+# -------------------------------------------------
 
 def get_price_from_string(price_str):
     """'1,700원' 또는 숫자 1700 같은 값에서 숫자 1700을 추출합니다."""
@@ -215,10 +255,10 @@ def find_best_deal(item_name, user_store, user_telecom):
     if not results:
         # 최종적으로 results 리스트가 비어있으면, 명확한 메시지를 반환합니다.
         if user_store:
-             return {"message": f"'{item_name}'에 대한 행사 정보나 관련 혜택을 찾을 수 없습니다."}
+            return {"message": f"'{item_name}'에 대한 행사 정보나 관련 혜택을 찾을 수 없습니다."}
         else:
-             return {"message": f"'{item_name}'에 대한 할인 정보를 찾을 수 없습니다. 먼저 설문조사를 통해 선호 편의점을 알려주세요."}
-             
+            return {"message": f"'{item_name}'에 대한 할인 정보를 찾을 수 없습니다. 먼저 설문조사를 통해 선호 편의점을 알려주세요."}
+            
     return results
 
 @app.route('/search', methods=['POST'])
@@ -240,18 +280,9 @@ def search():
         print(f"An error occurred during search: {e}")
         return jsonify({"error": "서버 내부 오류가 발생했습니다."}), 500
 
+# --- if __name__ == '__main__': 블록은 로컬 테스트용으로만 사용 ---
 if __name__ == '__main__':
-    if not os.path.exists(CRAWLING_RESULT_PATH):
-        print("초기 데이터 파일이 없습니다. 초기 크롤링을 실행합니다...")
-        run_crawling_and_save()
-
-    scheduler = BackgroundScheduler(daemon=True)
-    scheduler.add_job(run_crawling_and_save, 'interval', hours=6)
-    scheduler.start()
-    
-    print("Flask 서버를 시작합니다.")
-    # --- 수정된 부분 ---
-    # 외부에서 접속할 수 있도록 host='0.0.0.0' 추가
-    # Render는 기본적으로 10000번 포트를 사용하므로 port=10000 설정
-    port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    # 로컬에서 직접 실행할 때만 사용됩니다.
+    # Render(Gunicorn) 환경에서는 이 부분이 실행되지 않습니다.
+    print("로컬 개발 서버를 시작합니다...")
+    app.run(host='0.0.0.0', port=5001, debug=True)

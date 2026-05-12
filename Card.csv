@@ -1,0 +1,11 @@
+﻿card_id,card_name,merchant_category,discount_rate,min_performance,remarks
+C01,KB Kookmin Nori2 Check Card,All CVS,0.05,"200,000 KRW","Steady seller for students, Starbucks/Google Play benefits"
+C02,Woori K-Pass Check Card,All CVS,0.1,"200,000 KRW",Transport refund + 10% CVS discount (Essential for commuters)
+C03,Shinhan K-Pass Check Card,All CVS,0.02,"200,000 KRW","Low performance requirement, optimized for transport"
+C04,NH Nonghyup Nori2 Check Card,All CVS,0.05,"200,000 KRW",For Nonghyup primary users
+C05,Shinhan Card Deep On Platinum+,All CVS,0.2,"300,000 KRW",High discount rate with easy pay linkage
+C06,Hyundai CardZ work Edition2,All CVS,0.1,"500,000 KRW",CVS/Coffee/Online shopping focus
+C07,Samsung Card tap tap S,All CVS,0.01,None,Points earned regardless of performance
+C08,KakaoBank Friends Check Card,All CVS,0.03,"300,000 KRW","Cashback-based, monthly promo changes"
+C09,Naver Pay Money Hana Check Card,All CVS,0.012,"250,000 KRW",Maximize Naver Pay point accumulation
+C10,GS25 Pop Card (Check),GS25,0.1,None,Auto discount on GS25 event items + extra points

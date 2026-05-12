@@ -1,0 +1,7 @@
+﻿telecom_id,provider,tier,partner_cvs,discount_rate,details
+T01,SKT,VIP/Gold,CU/7-Eleven,0.1,"100 KRW discount per 1,000 KRW"
+T02,SKT,Silver,CU/7-Eleven,0.05,"50 KRW discount per 1,000 KRW"
+T03,KT,VVIP/VIP,GS25/CU,0.1,Tier-based discount
+T04,KT,General/Silver,GS25/CU,0.05,Tier-based discount
+T05,LG U+,VIP/VVIP,GS25,0.1,Including 'My Choice' benefits
+T06,LG U+,General/Silver,GS25,0.05,Basic membership discount
