@@ -27,7 +27,8 @@
 * **카드 혜택**: 내가 보유한 카드중 편의점 업종별 최대 할인/적립/캐시백 혜택을 가진 카드 추천
 
 
-## 🛠 기술 스택 
-- **Database**: PostgreSQL (JSONB 타입을 활용한 유연한 혜택 저장)
-- **AI/Logic**: Python (Scikit-learn을 활용한 소비 패턴 분류 및 최적화 추천)
-- **Data**: Selenium/BeautifulSoup (카드사/통신사 혜택 정보 자동 수집)
+## 🛠 주요 기술 스택 (데이터 파이프라인)
+언어: Python 3
+1. 웹 크롤링: requests, BeautifulSoup (웹 데이터 수집 및 파싱)
+2. 데이터 가공: pandas (수집된 데이터 정제 및 DB 형태에 맞게 변환)
+3. DB : PostgreSQL, SQLAlchemy (데이터 최종 저장 및 연동)
