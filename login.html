@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로그인 - Young-AI 파트너</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .login-container {
+            background: #ffffff;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .login-container h1 {
+            font-size: 1.8rem;
+            color: #4a4a4a;
+            margin-bottom: 1.5rem;
+            font-weight: bold;
+        }
+
+        .login-container form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .login-container input[type="text"],
+        .login-container input[type="password"] {
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            background-color: #f9f9f9;
+            transition: all 0.3s ease;
+        }
+
+        .login-container input[type="text"]:focus,
+        .login-container input[type="password"]:focus {
+            outline: none;
+            border-color: #007bff;
+            background-color: #ffffff;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+
+        .login-container button {
+            padding: 0.8rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .login-container button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        .login-container button:active {
+            transform: translateY(0);
+        }
+
+        .login-container .back-link {
+            margin-top: 1rem;
+            display: block;
+            font-size: 0.9rem;
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .login-container .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>로그인</h1>
+        <form id="loginForm">
+            <input type="text" id="loginId" placeholder="아이디" required>
+            <input type="password" id="loginPassword" placeholder="비밀번호" required>
+            <button type="submit">로그인</button>
+        </form>
+        <a href="index.html" class="back-link">← 돌아가기</a>
+        <p id="loginMessage" class="error-message"></p>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const id = document.getElementById('loginId').value;
+            const password = document.getElementById('loginPassword').value;
+
+            const users = JSON.parse(localStorage.getItem('users')) || {};
+            if (users[id] && users[id].password === password) {
+                // 로그인 성공
+                localStorage.setItem('loggedInUser', JSON.stringify({ id: id, name: users[id].name }));
+                window.location.href = 'home.html';
+            } else {
+                // 로그인 실패
+                document.getElementById('loginMessage').textContent = '아이디 또는 비밀번호가 올바르지 않습니다.';
+            }
+        });
+    </script>
+</body>
+</html>

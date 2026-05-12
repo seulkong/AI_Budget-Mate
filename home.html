@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>홈 - Young-AI 파트너</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=af9ca96057244088973c43903647c16b&libraries=services,clusterer,drawing"></script>
+</head>
+<body class="home-body">
+    <div class="home-container">
+        <header>
+            <h1><span id="homeUserName"></span>님, 환영합니다!</h1>
+            <button id="logoutButton">로그아웃</button>
+        </header>
+
+        <main>
+            <nav class="tab-menu">
+                <button class="tab-link active" onclick="openTab(event, 'Map')">근처 편의점 찾기</button>
+                <button class="tab-link" onclick="openTab(event, 'Chatbot')">AI 챗봇</button>
+            </nav>
+
+            <!-- 근처 편의점 찾기 -->
+            <div id="Map" class="tab-content" style="display: block;">
+                <div class="map-layout">
+                    <div id="map-view" class="map-view">
+                        <!-- 카카오맵이 여기에 표시됩니다. -->
+                    </div>
+                    <div class="store-list-container">
+                        <div class="store-column">
+                            <h3>GS25 (가까운 순)</h3>
+                            <ul id="gs25-list">
+                                <!-- 예시 데이터 -->
+                                <li>GS25 수원대점 (150m)</li>
+                                <li>GS25 와우리점 (320m)</li>
+                                <li>GS25 봉담와우점 (550m)</li>
+                                <li>GS25 봉담쌍용점 (800m)</li>
+                            </ul>
+                        </div>
+                        <div class="store-column">
+                            <h3>CU (가까운 순)</h3>
+                            <ul id="cu-list">
+                                <!-- 예시 데이터 -->
+                                <li>CU 수원대정문점 (180m)</li>
+                                <li>CU 와우A플러스점 (410m)</li>
+                                <li>CU 봉담드림점 (620m)</li>
+                                <li>CU 봉담효행점 (950m)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI 챗봇 -->
+            <div id="Chatbot" class="tab-content">
+                <div class="chat-container">
+                    <div class="chat-window">
+                        <div class="chat-message bot-message">안녕하세요! 원하는 상품을 검색하면 최적의 구매 방법을 찾아드릴게요.</div>
+                    </div>
+                    <div class="chat-input">
+                        <input type="text" id="chatInput" placeholder="상품명을 입력하세요 (예: 오레오)">
+                        <button id="chatSendButton">전송</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="js/main.js"></script>
+</body>
+</html>
