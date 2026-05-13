@@ -1,16 +1,16 @@
 const API_BASE_URL = 'https://ai-budget-mate-api.cana1222.workers.dev'; // Cloudflare Workers 주소
 
 document.addEventListener('DOMContentLoaded', () => {
-    const tempUser = localStorage.getItem('tempUser');
-    const tempUserId = localStorage.getItem('tempUserId');
-    if (!tempUser || !tempUserId) {
-        // 비정상 접근 시 로그인 페이지로
+    // 세션 정보 확인
+    const loggedInUserStr = localStorage.getItem('loggedInUser');
+    if (!loggedInUserStr) {
         window.location.href = 'index.html';
         return;
     }
 
-    document.getElementById('userName').textContent = tempUser;
-    document.getElementById('userName2').textContent = tempUser;
+    const loggedInUser = JSON.parse(loggedInUserStr);
+    document.getElementById('userName').textContent = loggedInUser.name;
+    document.getElementById('userName2').textContent = loggedInUser.name;
 
     const cardData = {
         '신한카드': ['Mr.Life (미스터 라이프)', 'Deep On Platinum+'],
@@ -61,34 +61,26 @@ document.addEventListener('DOMContentLoaded', () => {
             card = cardNameSelect.value;
         }
 
-        // users DB에서 기존 데이터(소비 스타일 등) 가져오기
-        const users = JSON.parse(localStorage.getItem('users')) || {};
-        const currentUser = users[tempUserId] || {};
-
-        // LocalStorage에 설문 데이터 저장 (API 우회)
-        const loggedInUser = {
-            id: tempUserId,
-            name: tempUser,
-            style: currentUser.style, // 소비 스타일 추가
-            store: store,
-            carrier: carrier,
-            carrier_tier: carrier_tier,
-            card: card
-        };
+        // 기존 정보에 설문 데이터 추가
+        loggedInUser.store = store;
+        loggedInUser.carrier = carrier;
+        loggedInUser.carrier_tier = carrier_tier;
+        loggedInUser.card = card;
         
         localStorage.setItem('loggedInUser', JSON.stringify(loggedInUser));
-        localStorage.removeItem('tempUser');
-        localStorage.removeItem('tempUserId');
-        
-        // users DB에도 업데이트
-        if (users[tempUserId]) {
-            users[tempUserId].store = store;
-            users[tempUserId].carrier = carrier;
-            users[tempUserId].carrier_tier = carrier_tier;
-            users[tempUserId].card = card;
-            localStorage.setItem('users', JSON.stringify(users));
-        }
 
+        // 백엔드 서버에 설정 저장 (옵션)
+        fetch(`${API_BASE_URL}/api/survey`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                id: loggedInUser.id,
+                store: store,
+                carrier: carrier
+            })
+        }).catch(err => console.error('Survey sync error:', err));
+
+        // 홈 화면으로 이동
         window.location.href = 'home.html';
     });
 });
