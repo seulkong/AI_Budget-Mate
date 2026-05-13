@@ -10,15 +10,18 @@
     <div class="container">
         <h2>회원가입</h2>
         <form id="signupForm">
-            <input type="text" id="name" placeholder="이름" required>
-            <input type="tel" id="phone" placeholder="전화번호" required>
-            <input type="text" id="signupId" placeholder="ID" required>
-            <input type="password" id="signupPassword" placeholder="비밀번호" required>
-            <input type="password" id="confirmPassword" placeholder="비밀번호 확인" required>
+            <input type="text" id="name" placeholder="이름을 입력해주세요" required>
+            <select id="consumptionStyle" required style="padding: 10px; margin-bottom: 15px; width: 100%; border: 1px solid #ccc; border-radius: 4px;">
+                <option value="">나의 소비 스타일은?</option>
+                <option value="health">🥗 헬시 플레저 (Healthy Pleasure) (단백질 듬뿍, 제로 슈거! 건강한 간식이 필요해요)</option>
+                <option value="dessert">🍰 디저트 러버 (스트레스 풀리는 달달한 편의점 디저트가 최고예요)</option>
+                <option value="brand">🏪 브랜드 선호 (제가 좋아하는 편의점 위주로 갈래요!)</option>
+                <option value="trend">🔥 신상/트렌드 추구 (요즘 핫한 신상품을 제일 먼저 먹어볼래요!)</option>
+            </select>
+
             <button type="submit">회원가입</button>
         </form>
         <p id="signupMessage" class="error-message"></p>
-        <p>이미 계정이 있으신가요? <a href="index.html">로그인</a></p>
     </div>
     <script src="js/auth.js?v=2"></script>
 </body>

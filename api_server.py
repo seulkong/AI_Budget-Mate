@@ -128,7 +128,7 @@ def get_price_from_string(price_str):
     nums = re.findall(r'\d+', price_str.replace(',', ''))
     return int("".join(nums)) if nums else None
 
-def calculate_best_price(item_name, user_store, user_telecom):
+def calculate_best_price(item_name, user_store, user_telecom, user_telecom_tier='none', user_card='none', user_style='health'):
     """모든 할인을 적용하여 최저가를 계산하는 핵심 함수"""
     
     # 1. 행사 상품 정보 찾기 (대소문자 구분 없이)
@@ -148,31 +148,75 @@ def calculate_best_price(item_name, user_store, user_telecom):
                         })
     
     if not event_items:
-        return {"message": f"'{item_name}'에 대한 편의점 행사 정보를 찾을 수 없습니다."}
+        return {
+            "message": f"아쉽게도 현재 진행 중인 '{item_name}' 행사 상품을 찾지 못했어요. 오타가 있는지 확인해 보시거나, '우유', '라면' 처럼 조금 더 짧은 단어로 다시 검색해 보시겠어요?"
+        }
+
+    unique_item_names = list(set([item['name'] for item in event_items]))
+    
+    # 여러 상품이 매칭되는 경우 (단, 정확히 일치하는 이름이 하나만 있다면 그걸로 간주)
+    exact_match = [name for name in unique_item_names if name.lower() == item_name.lower()]
+    if exact_match:
+        unique_item_names = exact_match
+        event_items = [item for item in event_items if item['name'].lower() == item_name.lower()]
+        
+    if len(unique_item_names) > 1:
+        # 상품 리스트 반환 (최대 10개로 제한하여 너무 길어지지 않게 함)
+        return {
+            "type": "list", 
+            "message": f"'{item_name}'(으)로 검색된 상품이 여러 개 있습니다. 정확히 어떤 상품을 찾으시나요? 아래에서 선택해 주세요.", 
+            "items": unique_item_names[:10]
+        }
 
     # 2. 사용자의 통신사 할인율 찾기
     telecom_discount_rate = 0
     telecom_benefit_str = "없음"
-    if not telecom_df.empty and user_store and user_telecom:
+    if not telecom_df.empty and user_store and user_telecom and user_telecom != 'none':
+        # 통신사 이름 필터링 (대소문자 무시)
         telecom_info = telecom_df[
             telecom_df['partner_cvs'].str.contains(user_store, na=False) &
-            (telecom_df['provider'] == user_telecom)
+            (telecom_df['provider'].str.lower() == user_telecom.lower())
         ]
+        
         if not telecom_info.empty:
-            best_telecom = telecom_info.sort_values(by='discount_rate', ascending=False).iloc[0]
+            # 등급 필터링
+            if user_telecom_tier == 'high':
+                tier_info = telecom_info[telecom_info['tier'].str.contains('VIP|Gold', case=False, na=False)]
+            elif user_telecom_tier == 'low':
+                tier_info = telecom_info[telecom_info['tier'].str.contains('Silver|General', case=False, na=False)]
+            else:
+                tier_info = telecom_info # 등급 정보가 없으면 전체에서 찾음
+                
+            if tier_info.empty:
+                tier_info = telecom_info # 매칭되는 등급이 없으면 전체에서 기본값 찾기
+                
+            best_telecom = tier_info.sort_values(by='discount_rate', ascending=False).iloc[0]
             telecom_discount_rate = best_telecom['discount_rate']
             telecom_benefit_str = f"{best_telecom['provider']} {best_telecom['tier']} ({best_telecom['details']})"
 
     # 3. 적용 가능한 모든 카드 할인율 찾기
     card_discounts = []
     if not card_df.empty:
-        card_info = card_df[card_df['merchant_category'].str.contains('All CVS', na=False)]
-        for _, row in card_info.iterrows():
-            card_discounts.append({
-                'name': row['card_name'],
-                'rate': row['discount_rate'],
-                'benefit': f"{row['discount_rate']*100}% 할인 (전월 실적: {row['min_performance']}원)"
-            })
+        for _, row in card_df.iterrows():
+            card_name = row.get('Card_Name', '')
+            benefit_details = str(row.get('Benefit_Details', ''))
+            target_brands = str(row.get('Target_Brands', ''))
+            
+            # 할인율 파싱 (예: "10% 청구 할인" -> 0.1)
+            rate = 0
+            if '%' in benefit_details:
+                try:
+                    num_str = re.search(r'(\d+)%', benefit_details).group(1)
+                    rate = int(num_str) / 100
+                except:
+                    pass
+
+            if rate > 0 and ((user_store and user_store in target_brands) or '주요 편의점' in target_brands):
+                card_discounts.append({
+                    'name': card_name,
+                    'rate': rate,
+                    'benefit': f"{int(rate*100)}% 할인 ({row.get('Minimum_Spending', '조건없음')})"
+                })
 
     # 4. 모든 조합을 계산하여 최저가 찾기
     best_deal = None
@@ -193,10 +237,12 @@ def calculate_best_price(item_name, user_store, user_telecom):
             best_deal = deal_info
 
         for card in card_discounts:
-            final_price_with_card = price_after_telecom * (1 - card['rate'])
-            if final_price_with_card < best_deal['final_price']:
-                best_deal['final_price'] = round(final_price_with_card)
-                best_deal['card_benefit'] = f"{card['name']} ({card['benefit']})"
+            # 설문에서 카드를 선택하지 않았거나(none), 선택한 카드와 일치할 때만 적용
+            if user_card == 'none' or user_card == card['name']:
+                final_price_with_card = price_after_telecom * (1 - card['rate'])
+                if final_price_with_card < best_deal['final_price']:
+                    best_deal['final_price'] = round(final_price_with_card)
+                    best_deal['card_benefit'] = f"{card['name']} ({card['benefit']})" + (" (추천)" if user_card == 'none' else "")
 
     # 5. 최종 결과 메시지 생성
     if best_deal:
@@ -215,7 +261,20 @@ def calculate_best_price(item_name, user_store, user_telecom):
         cu_promo_str = promotions_summary["CU"]
         # -----------------------------------------
 
+        style_msg = ""
+        if user_style == 'health':
+            style_msg = "건강과 맛을 동시에! 칼로리와 영양을 챙기시는 성향에 맞춰 혜택을 정리했습니다!\n\n"
+        elif user_style == 'dessert':
+            style_msg = "기분 좋은 달콤함! 디저트 러버 성향에 맞춰 맛있는 혜택을 정리했습니다!\n\n"
+        elif user_style == 'brand':
+            style_msg = "브랜드를 선호하시는 성향을 고려해 맞춤형으로 혜택을 정리했습니다!\n\n"
+        elif user_style == 'trend':
+            style_msg = "트렌디한 감각에 맞춰 현재 제일 잘 나가는 핫한 아이템 정보로 혜택을 찾아봤어요!\n\n"
+        else:
+            style_msg = ""
+
         reply = (
+            f"{style_msg}"
             f"'{best_deal['item_name']}' 최저가 구매 방법입니다!\n\n"
             f"🏪 편의점: {best_deal['store']}\n"
             f"💲 최종 가격: 약 {best_deal['final_price']:,}원 (정가: {best_deal['base_price']:,}원)\n\n"
@@ -270,16 +329,14 @@ def find_best_deal(item_name, user_store, user_telecom):
         stores_to_check_cards = {user_store}
 
     if not card_df.empty and stores_to_check_cards:
-        card_info = card_df[
-            card_df['merchant_category'].str.contains('All CVS', na=False) |
-            card_df['merchant_category'].isin(list(stores_to_check_cards))
-        ]
-        for _, row in card_info.iterrows():
-            results.append({
-                "type": "카드 할인",
-                "card_name": row['card_name'],
-                "benefit": f"{row['discount_rate']*100}% 할인 (전월 실적: {row['min_performance']}원)"
-            })
+        for store in stores_to_check_cards:
+            card_info = card_df[card_df['Target_Brands'].str.contains(store, na=False) | card_df['Target_Brands'].str.contains('주요 편의점', na=False)]
+            for _, row in card_info.iterrows():
+                results.append({
+                    "type": "카드 할인",
+                    "card_name": row.get('Card_Name', ''),
+                    "benefit": str(row.get('Benefit_Details', '')) + f" ({row.get('Minimum_Spending', '')})"
+                })
 
     # --- 최종 결과 처리 로직 수정 ---
     if not results:
@@ -389,26 +446,118 @@ def search():
     try:
         data = request.json
         item_name = data.get('item_name')
-        user_id = data.get('user_id')
+        
+        # 클라이언트에서 직접 전달된 설문 데이터
+        user_style = data.get('user_style', 'health')
+        user_store = data.get('user_store')
+        user_telecom = data.get('user_telecom')
+        user_telecom_tier = data.get('user_telecom_tier', 'none')
+        user_card = data.get('user_card', 'none')
 
         if not item_name:
             return jsonify({"error": "상품명을 입력해주세요."}), 400
-        
-        user_store = None
-        user_telecom = None
 
-        if user_id:
-            conn = sqlite3.connect(DB_PATH)
-            cursor = conn.cursor()
-            cursor.execute("SELECT store, carrier FROM users WHERE id = ?", (user_id,))
-            user_info = cursor.fetchone()
-            conn.close()
+        # --- [카드 관련 문의 처리] ---
+        # 1. 카드가 없다는 피드백 대응
+        no_card_keywords = ['카드없어', '카드가없', '안써', '카드없는데', '없는데', '카드아예없어']
+        clean_item_name = item_name.replace(" ", "")
+        if any(kw in clean_item_name for kw in no_card_keywords):
+             return jsonify({"message": "아하, 해당 카드를 가지고 있지 않으시군요! 💳 괜찮습니다. 카드가 없어도 통신사 할인만으로 충분히 혜택을 받으실 수 있어요. 혹은 현재 가지고 계신 다른 카드 이름을 말씀해 주시면 혜택이 있는지 바로 확인해 드릴게요!"})
+             
+        # 2. 특정 카드 언급 확인 (데이터베이스 연동)
+        if not card_df.empty:
+            found_card = None
+            for _, row in card_df.iterrows():
+                c_name = str(row['Card_Name'])
+                c_issuer = str(row['Issuer'])
+                # 메시지에 카드 이름이나 카드사(2글자 이상)가 포함되어 있는지 확인
+                if (c_name in item_name) or (len(c_issuer) >= 2 and c_issuer in item_name):
+                    found_card = row
+                    break
             
-            if user_info:
-                user_store = user_info[0]
-                user_telecom = user_info[1]
+            if found_card is not None:
+                store_display = user_store if user_store and user_store != 'none' else "주요 편의점"
+                reply = (
+                    f"오, {found_card['Card_Name']}을(를) 가지고 계시군요! 잠시만요... 🔍\n\n"
+                    f"확인 결과, 이 카드는 {store_display}에서 **{found_card['Benefit_Details']}** 혜택이 있네요! "
+                    f"({found_card['Minimum_Spending']} 조건)\n\n"
+                    f"이 카드로 결제하시면 더 저렴하게 구매 가능합니다. 다른 궁금한 점이 있으신가요?"
+                )
+                return jsonify({"message": reply})
+        # ----------------------------
+        # --- [추천 시스템 분기] ---
+        recommendation_keywords = ['추천', '핫한', '트렌드', '요즘', '뭐먹지', '신상']
+        is_recommendation = any(kw in item_name for kw in recommendation_keywords)
         
-        result = calculate_best_price(item_name, user_store, user_telecom)
+        if is_recommendation:
+            if not crawling_data:
+                return jsonify({"message": "현재 행사 데이터를 불러올 수 없습니다."})
+                
+            matched_items = []
+            rec_message = ""
+            keywords = []
+            
+            if user_style == 'health':
+                keywords = ['제로', '단백질', '프로틴', '닭가슴살', '샐러드', '두부', '무설탕', '저칼로리', '그릭', '건강']
+                rec_message = "🥗 헬시 플레저를 위한 건강한 간식들을 모아봤어요! 관심 있는 상품을 선택해 보세요."
+            elif user_style == 'dessert':
+                keywords = ['초코', '케이크', '젤리', '아이스크림', '푸딩', '마카롱', '쿠키', '빵', '크림', '약과', '달콤']
+                rec_message = "🍰 당 충전이 필요하신가요? 보기만 해도 달콤한 디저트들을 모아봤어요!"
+            elif user_style == 'trend':
+                keywords = ['마라', '두바이', '콜라보', '하이볼', '먹태', '요아정', '점보', '탕후루']
+                rec_message = "🔥 요즘 SNS에서 제일 핫한 트렌드 상품들이에요! 관심 있는 상품을 선택해 보세요."
+            else: # brand 등
+                # 브랜드 선호는 선택한 편의점의 1+1 위주로 추천
+                for item in crawling_data:
+                    promos = item.get('promotions', [])
+                    name = item.get('name')
+                    store = item.get('shop')
+                    if name and isinstance(name, str):
+                        # 브랜드 선호면 선호 편의점만 필터링
+                        if user_style == 'brand' and user_store and user_store != 'none' and store != user_store:
+                            continue
+                        if '1+1' in promos:
+                            matched_items.append(('1+1', name))
+                rec_message = f"🏪 선호하시는 {user_store} 편의점의 대박 1+1 행사 상품들을 모아봤어요!"
+
+            # 키워드 기반 매칭 (health, dessert, trend)
+            if keywords:
+                for item in crawling_data:
+                    name = item.get('name')
+                    if name and isinstance(name, str):
+                        for kw in keywords:
+                            if kw in name:
+                                matched_items.append((kw, name))
+            
+            if matched_items:
+                import random
+                random.shuffle(matched_items)
+                
+                # 다양한 키워드가 나오도록 제한
+                sample_items = []
+                keyword_counts = {}
+                
+                for kw, name in matched_items:
+                    if name not in sample_items:
+                        # 1+1 상품은 제한을 크게(20개) 풀고, 다른 키워드는 다양성을 위해 3개로 조정
+                        limit = 20 if kw == '1+1' else 3
+                        if keyword_counts.get(kw, 0) < limit:
+                            sample_items.append(name)
+                            keyword_counts[kw] = keyword_counts.get(kw, 0) + 1
+                    
+                    if len(sample_items) >= 20:
+                        break
+                        
+                return jsonify({
+                    "type": "list",
+                    "message": rec_message,
+                    "items": sample_items
+                })
+            else:
+                return jsonify({"message": "현재 해당 성향에 맞는 추천 상품 정보가 없네요. 일반 상품을 검색해 보세요!"})
+        # ------------------------
+        
+        result = calculate_best_price(item_name, user_store, user_telecom, user_telecom_tier, user_card, user_style)
         return jsonify(result)
     except Exception as e:
         print(f"An error occurred during search: {e}")

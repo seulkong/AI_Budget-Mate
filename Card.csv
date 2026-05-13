@@ -1,11 +1,15 @@
-﻿card_id,card_name,merchant_category,discount_rate,min_performance,remarks
-C01,KB Kookmin Nori2 Check Card,All CVS,0.05,"200,000 KRW","Steady seller for students, Starbucks/Google Play benefits"
-C02,Woori K-Pass Check Card,All CVS,0.1,"200,000 KRW",Transport refund + 10% CVS discount (Essential for commuters)
-C03,Shinhan K-Pass Check Card,All CVS,0.02,"200,000 KRW","Low performance requirement, optimized for transport"
-C04,NH Nonghyup Nori2 Check Card,All CVS,0.05,"200,000 KRW",For Nonghyup primary users
-C05,Shinhan Card Deep On Platinum+,All CVS,0.2,"300,000 KRW",High discount rate with easy pay linkage
-C06,Hyundai CardZ work Edition2,All CVS,0.1,"500,000 KRW",CVS/Coffee/Online shopping focus
-C07,Samsung Card tap tap S,All CVS,0.01,None,Points earned regardless of performance
-C08,KakaoBank Friends Check Card,All CVS,0.03,"300,000 KRW","Cashback-based, monthly promo changes"
-C09,Naver Pay Money Hana Check Card,All CVS,0.012,"250,000 KRW",Maximize Naver Pay point accumulation
-C10,GS25 Pop Card (Check),GS25,0.1,None,Auto discount on GS25 event items + extra points
+﻿Issuer,Card_Name,Type,Benefit_Type,Benefit_Details,Minimum_Spending,Monthly_Limit,Target_Brands,Notes
+신한카드,Mr.Life (미스터 라이프),신용,할인,10% 청구 할인,30만원 이상,"3,000원 ~ 10,000원 (실적별 차등)","GS25, CU, 세븐일레븐, 이마트24",1회 결제금액 1만원까지 할인 적용 (최대 1천원 할인)
+신한카드,Deep On Platinum+,신용,할인,20% 청구 할인,30만원 이상,"10,000원 ~ 30,000원 (실적별 차등)","GS25, CU, 세븐일레븐, 이마트24",편의점/커피/잡지 등 생활 영역 통합 한도
+KB국민카드,노리2 체크카드 (KB Pay),체크,캐시백,5% 환급 할인,20만원 이상,"2,000원 (편의점 개별 한도)","GS25, CU",KB Pay 결제 시 2% 추가 캐시백 가능
+KB국민카드,카카오뱅크 KB국민카드,신용,할인,"건당 1만원 이상 결제 시 3,000원 할인",50만원 이상,"횟수 제한 (3,000원 x N회)","GS25, CU",건당 결제 금액이 클 때 유리
+삼성카드,삼성 iD ON 카드,신용,할인,많이 쓰는 영역 10% 할인,30만원 이상,"10,000원 (생활영역 통합)",주요 편의점,커피/편의점/배달앱 중 가장 많이 쓴 영역 자동 적용
+삼성카드,삼성 iD SIMPLE 카드,신용,할인,편의점 7% 할인,30만원 이상,"5,000원",주요 편의점,기본 0.7% 무제한 할인 + 편의점/의료 7% 할인
+현대카드,현대카드 Z work Edition2,신용,할인,10% 청구 할인,50만원 이상,"6,000원 ~ 10,000원","GS25, CU, 세븐일레븐, 이마트24",1일 1회 할인 적용
+롯데카드,LOCA LIKIT Shop,신용,할인,60% 청구 할인,40만원 이상,"13,000원 (통합 한도)","GS25, CU, 세븐일레븐",할인율이 매우 높으나 실적 제외 항목 주의
+우리카드,D4 카드의정석 Ⅱ,신용,할인,11% 청구 할인,30만원 이상,"3,300원 (편의점 한도)","GS25, CU, 세븐일레븐, 이마트24",커피 55% 할인 혜택과 병행 추천
+하나카드,# MY WAY 카드,신용,할인,건당 300원 할인,30만원 이상,"월 10,000원 (통합)",주요 편의점,"소액 결제(건당 3,000원 이하)가 잦은 경우 유리"
+카카오뱅크,프렌즈 체크카드,체크,캐시백,건당 100원 캐시백,30만원 이상,"1,000원 (월 10회)",GS25,2026 프렌즈 캐시백 프로모션 기준
+NH농협카드,zgm.play 카드,신용,할인,5% 청구 할인,30만원 이상,"5,000원 ~ 15,000원 (실적별 차등)","CU, GS25",플레이(오락/엔터) 특화 카드
+KB국민카드,나라사랑카드,체크,캐시백,5% 청구 할인,20만원 이상,"5000~50,000원","CU, GS25",전역한 대학생들에게 인기
+GS리테일,GS 팝카드,선불충전,할인,10% 즉시 할인,없음,"없음","GS25",'POP' 태그가 있는 상품에 적용/카드 할인으로 겹쳐 사용 가능

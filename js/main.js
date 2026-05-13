@@ -210,22 +210,36 @@ function sendMessage() {
     addMessageToChat('user', messageText);
     chatInput.value = '';
 
+    // 잡담 및 일상 대화 예외 처리 (Fallback)
+    const smallTalkKeywords = ['안녕', '고마워', '누구야', '반가워', '안뇽', '감사', '누구니', 'ㅎㅇ'];
+    const isSmallTalk = smallTalkKeywords.some(keyword => messageText.includes(keyword));
+
+    if (isSmallTalk && messageText.length < 15) {
+        addMessageToChat('bot', '저는 편의점 할인 정보를 찾아주는 Young-AI 파트너입니다! 잡담보다는 편의점 할인을 기가 막히게 잘 찾으니, 언제든 찾고 싶은 상품이 있다면 편하게 말씀해 주세요!');
+        return;
+    }
+
     // 로딩 메시지 표시
     addMessageToChat('bot', '최적의 할인 정보를 찾고 있습니다...');
 
     // 사용자 정보 가져오기 (설문조사 결과)
     const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
     // 백엔드 API에 요청 보내기 (API_BASE_URL은 auth.js 등에 선언되어 있음, 없으면 하드코딩)
-    const serverUrl = 'https://time-2xjx.onrender.com/search'; // 배포 시 'https://time-2xjx.onrender.com/search' 로 변경
+    const serverUrl = 'http://127.0.0.1:5001/search'; // 로컬 서버로 직접 연결
     
     fetch(serverUrl, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'Bypass-Tunnel-Reminder': 'true'
         },
         body: JSON.stringify({ 
             item_name: messageText,
-            user_id: loggedInUser.id
+            user_style: loggedInUser.style,
+            user_store: loggedInUser.store,
+            user_telecom: loggedInUser.carrier,
+            user_telecom_tier: loggedInUser.carrier_tier,
+            user_card: loggedInUser.card
         }),
     })
     .then(response => response.json())
@@ -238,7 +252,34 @@ function sendMessage() {
         }
 
         // 서버로부터 받은 데이터 처리
-        if (data.message) {
+        if (data.type === 'list') {
+            addMessageToChat('bot', data.message);
+            const chatWindow = document.querySelector('.chat-window');
+            const optionsContainer = document.createElement('div');
+            optionsContainer.style.display = 'flex';
+            optionsContainer.style.flexDirection = 'column';
+            optionsContainer.style.gap = '5px';
+            optionsContainer.style.marginTop = '10px';
+            
+            data.items.forEach(item => {
+                const btn = document.createElement('button');
+                btn.textContent = item;
+                btn.style.padding = '8px';
+                btn.style.backgroundColor = '#f0f4f8';
+                btn.style.color = '#007bff';
+                btn.style.border = '1px solid #cce5ff';
+                btn.style.borderRadius = '5px';
+                btn.style.cursor = 'pointer';
+                btn.style.textAlign = 'left';
+                btn.onclick = () => {
+                    document.getElementById('chatInput').value = item;
+                    sendMessage();
+                };
+                optionsContainer.appendChild(btn);
+            });
+            chatWindow.appendChild(optionsContainer);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        } else if (data.message) {
             addMessageToChat('bot', data.message);
         } else if (data.length > 0) {
             let reply = `'${messageText}'에 대한 추천 조합입니다:\n\n`;
@@ -282,7 +323,7 @@ function sendMessage() {
     })
     .catch(error => {
         console.error('Error:', error);
-        addMessageToChat('bot', '오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+        addMessageToChat('bot', '앗, 잠시 정보를 불러오는 데 문제가 생겼어요. 네트워크 연결을 확인하시고 1~2분 뒤에 다시 시도해 주세요!');
     });
 }
 
@@ -296,6 +337,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const loggedInUser = JSON.parse(loggedInUserStr);
     document.getElementById('homeUserName').textContent = loggedInUser.name;
+
+    let greetingMsg = `안녕하세요, ${loggedInUser.name}님! 원하시는 편의점 상품을 입력해 주시면 최적의 구매 방법을 찾아드릴게요. (예: 오레오씬즈화이트, 우유)`;
+    if (loggedInUser.style === 'health') {
+        greetingMsg = `안녕하세요! 건강과 맛을 모두 챙기시는군요. 칼로리는 낮고 영양은 빵빵한 헬스케어 상품 위주로 추천해 드릴게요!`;
+    } else if (loggedInUser.style === 'dessert') {
+        greetingMsg = `안녕하세요! 달콤한 휴식이 필요하신가요? 보기만 해도 기분 좋아지는 편의점 디저트와 달달한 간식들을 찾아드릴게요!`;
+    } else if (loggedInUser.style === 'brand') {
+        const storeStr = loggedInUser.store && loggedInUser.store !== 'none' ? loggedInUser.store : '선호하시는 편의점';
+        greetingMsg = `안녕하세요! ${storeStr}에서 진행 중인 쏠쏠한 혜택을 중심으로 찾아드릴게요. 찾으시는 상품이 있나요?`;
+    } else if (loggedInUser.style === 'trend') {
+        greetingMsg = `안녕하세요! 트렌디한 감각을 지니셨군요. 요즘 SNS에서 가장 핫한 신상과 트렌디한 편의점 상품 위주로 추천해 드릴게요!`;
+    }
+
+    // 성향별 가이드 문구 설정
+    let guideStyle = "맞춤형";
+    if (loggedInUser.style === 'health') guideStyle = "건강한 헬시 플레저";
+    else if (loggedInUser.style === 'dessert') guideStyle = "달콤한 디저트";
+    else if (loggedInUser.style === 'brand') guideStyle = `${loggedInUser.store && loggedInUser.store !== 'none' ? loggedInUser.store : '편의점'}의 대박 1+1`;
+    else if (loggedInUser.style === 'trend') guideStyle = "가장 핫한 트렌드";
+
+    // 작성 가이드 추가
+    greetingMsg += `<br><br>[작성 가이드]<br>1. '우유', '라면'처럼 상품의 종류를 입력하시면 행사 중인 전체 리스트를 보여드려요.<br>2. '오레오씬즈화이트', '신라면'처럼 특정 상품명을 입력하시면 가장 저렴하게 살 수 있는 최적의 할인 조합을 즉시 찾아드립니다!`;
+    greetingMsg += `<br>3. '추천해줘' 혹은 '요즘 핫한 거 뭐야?'라고 채팅해서 ${guideStyle} 상품들을 추천받아보세요!`;
+    
+    // HTML에 하드코딩된 인사말 교체
+    const initialBotMessage = document.querySelector('.chat-window .bot-message');
+    if (initialBotMessage) {
+        initialBotMessage.innerHTML = greetingMsg.replace(/\n/g, '<br>');
+    }
 
     // 로그아웃 버튼
     document.getElementById('logoutButton').addEventListener('click', () => {
