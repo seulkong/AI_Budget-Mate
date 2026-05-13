@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://127.0.0.1:5001'; // 로컬 터널 대신 직접 연결
+const API_BASE_URL = 'https://ai-budget-mate.onrender.com'; // Render 서버 주소
 
 document.addEventListener('DOMContentLoaded', () => {
     const tempUser = localStorage.getItem('tempUser');
