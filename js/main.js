@@ -265,22 +265,27 @@ function sendMessage() {
             const chatWindow = document.querySelector('.chat-window');
             const optionsContainer = document.createElement('div');
             optionsContainer.style.display = 'flex';
-            optionsContainer.style.flexDirection = 'column';
-            optionsContainer.style.gap = '5px';
+            optionsContainer.style.flexWrap = 'wrap';
+            optionsContainer.style.gap = '8px';
             optionsContainer.style.marginTop = '10px';
+            optionsContainer.style.padding = '0 10px';
             
-            data.items.forEach(item => {
+            data.options.forEach(option => {
                 const btn = document.createElement('button');
-                btn.textContent = item;
-                btn.style.padding = '8px';
-                btn.style.backgroundColor = '#f0f4f8';
+                btn.textContent = option;
+                btn.className = 'option-btn';
+                btn.style.padding = '8px 14px';
+                btn.style.border = '1px solid #007bff';
+                btn.style.borderRadius = '20px';
+                btn.style.backgroundColor = 'white';
                 btn.style.color = '#007bff';
-                btn.style.border = '1px solid #cce5ff';
-                btn.style.borderRadius = '5px';
                 btn.style.cursor = 'pointer';
-                btn.style.textAlign = 'left';
+                btn.style.fontSize = '0.85em';
+                btn.style.margin = '4px';
+                btn.style.transition = 'all 0.2s';
+
                 btn.onclick = () => {
-                    document.getElementById('chatInput').value = item;
+                    document.getElementById('chatInput').value = option;
                     sendMessage();
                 };
                 optionsContainer.appendChild(btn);
