@@ -292,46 +292,130 @@ function sendMessage() {
             });
             chatWindow.appendChild(optionsContainer);
             chatWindow.scrollTop = chatWindow.scrollHeight;
+        } else if (data.type === 'result') {
+            addMessageToChat('bot', data.message);
+            
+            // 근처 편의점 찾기 버튼 추가
+            const chatWindow = document.querySelector('.chat-window');
+            const mapLinkBtn = document.createElement('button');
+            mapLinkBtn.textContent = `📍 근처 ${data.shop} 찾기`;
+            mapLinkBtn.className = 'map-link-btn';
+            mapLinkBtn.style.margin = '10px 10px 20px 10px';
+            mapLinkBtn.style.padding = '10px 20px';
+            mapLinkBtn.style.backgroundColor = '#28a745';
+            mapLinkBtn.style.color = 'white';
+            mapLinkBtn.style.border = 'none';
+            mapLinkBtn.style.borderRadius = '25px';
+            mapLinkBtn.style.cursor = 'pointer';
+            mapLinkBtn.style.fontWeight = 'bold';
+            mapLinkBtn.style.fontSize = '0.95em';
+            mapLinkBtn.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+            mapLinkBtn.style.boxShadow = '0 4px 12px rgba(40, 167, 69, 0.3)';
+            
+            mapLinkBtn.onmouseover = () => {
+                mapLinkBtn.style.transform = 'translateY(-2px)';
+                mapLinkBtn.style.boxShadow = '0 6px 15px rgba(40, 167, 69, 0.4)';
+                mapLinkBtn.style.backgroundColor = '#218838';
+            };
+            mapLinkBtn.onmouseout = () => {
+                mapLinkBtn.style.transform = 'translateY(0)';
+                mapLinkBtn.style.boxShadow = '0 4px 12px rgba(40, 167, 69, 0.3)';
+                mapLinkBtn.style.backgroundColor = '#28a745';
+            };
+
+            mapLinkBtn.onclick = () => {
+                // 1. 지도 탭 보이기 및 전환
+                const mapTab = document.getElementById('Map');
+                const chatbotTab = document.getElementById('Chatbot');
+                
+                if (mapTab && chatbotTab) {
+                    chatbotTab.style.display = 'none'; // 챗봇 숨기기
+                    mapTab.style.display = 'block';    // 지도 보이기
+                    
+                    // 탭 메뉴가 혹시 필요할 수 있으니 보이게 처리
+                    const tabMenu = document.querySelector('.tab-menu');
+                    if (tabMenu) tabMenu.style.display = 'flex';
+                    
+                    // 탭 링크 활성화 상태 변경
+                    document.querySelectorAll('.tab-link').forEach(link => {
+                        if (link.textContent.includes('찾기')) link.classList.add('active');
+                        else link.classList.remove('active');
+                    });
+                }
+                
+                // 2. 해당 브랜드만 강조 (스마트 필터링)
+                const gs25Col = Array.from(document.querySelectorAll('.store-column')).find(el => el.querySelector('#gs25-list'));
+                const cuCol = Array.from(document.querySelectorAll('.store-column')).find(el => el.querySelector('#cu-list'));
+                const container = document.querySelector('.store-list-container');
+                
+                if (container) {
+                    container.style.display = 'flex';
+                    container.style.flexDirection = 'column'; // 필터링 시에는 세로로 크게 보기
+                }
+                
+                if (data.shop === 'GS25') {
+                    if (gs25Col) {
+                        gs25Col.style.display = 'block';
+                        gs25Col.style.width = '100%';
+                        gs25Col.style.border = '2px solid #007bff';
+                        gs25Col.style.borderRadius = '15px';
+                        gs25Col.style.padding = '15px';
+                        gs25Col.style.marginBottom = '20px';
+                    }
+                    if (cuCol) cuCol.style.display = 'none';
+                } else if (data.shop === 'CU') {
+                    if (cuCol) {
+                        cuCol.style.display = 'block';
+                        cuCol.style.width = '100%';
+                        cuCol.style.border = '2px solid #007bff';
+                        cuCol.style.borderRadius = '15px';
+                        cuCol.style.padding = '15px';
+                        cuCol.style.marginBottom = '20px';
+                    }
+                    if (gs25Col) gs25Col.style.display = 'none';
+                }
+                
+                // 필터 초기화 버튼 추가 (작고 깔끔한 디자인으로 변경)
+                let resetBtn = document.getElementById('filterResetBtn');
+                if (!resetBtn) {
+                    resetBtn = document.createElement('button');
+                    resetBtn.id = 'filterResetBtn';
+                    resetBtn.textContent = '🔄 모든 편의점 다시 보기';
+                    resetBtn.style.display = 'block';
+                    resetBtn.style.margin = '20px auto';
+                    resetBtn.style.padding = '12px 24px';
+                    resetBtn.style.backgroundColor = '#007bff';
+                    resetBtn.style.color = 'white';
+                    resetBtn.style.border = 'none';
+                    resetBtn.style.borderRadius = '30px';
+                    resetBtn.style.cursor = 'pointer';
+                    resetBtn.style.fontWeight = 'bold';
+                    resetBtn.style.boxShadow = '0 4px 15px rgba(0, 123, 255, 0.3)';
+                    
+                    resetBtn.onclick = () => {
+                        if (container) container.style.flexDirection = 'row';
+                        if (gs25Col) {
+                            gs25Col.style.display = 'block';
+                            gs25Col.style.border = 'none';
+                            gs25Col.style.width = '50%';
+                        }
+                        if (cuCol) {
+                            cuCol.style.display = 'block';
+                            cuCol.style.border = 'none';
+                            cuCol.style.width = '50%';
+                        }
+                        resetBtn.remove();
+                    };
+                    container.parentNode.appendChild(resetBtn);
+                }
+            };
+            
+            chatWindow.appendChild(mapLinkBtn);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
         } else if (data.message) {
             addMessageToChat('bot', data.message);
-        } else if (data.length > 0) {
-            let reply = `'${messageText}'에 대한 추천 조합입니다:\n\n`;
-            
-            const events = data.filter(d => d.type === '행사 정보');
-            const telecoms = data.filter(d => d.type === '통신사 할인');
-            const cards = data.filter(d => d.type === '카드 혜택');
-
-            if (events.length > 0) {
-                reply += "🛒 편의점 행사:\n";
-                events.forEach(e => {
-                    reply += `- ${e.store}: ${e.item_name} (${e.event})\n`;
-                });
-                reply += "\n";
-            }
-
-            if (telecoms.length > 0) {
-                reply += "📱 통신사 할인 (선호 편의점 기준):\n";
-                telecoms.forEach(t => {
-                    reply += `- ${t.telecom}: ${t.benefit}\n`;
-                });
-                reply += "\n";
-            }
-            
-            if (cards.length > 0) {
-                reply += "💳 함께 쓰면 좋은 카드:\n";
-                // 카드 혜택은 너무 많을 수 있으므로 일부만 표시
-                const cardLimit = 3;
-                cards.slice(0, cardLimit).forEach(c => {
-                    reply += `- ${c.card_name} (${c.store}): ${c.benefit}\n`;
-                });
-                if (cards.length > cardLimit) {
-                    reply += `...등 ${cards.length - cardLimit}개의 추가 혜택이 있습니다.\n`;
-                }
-            }
-            
-            addMessageToChat('bot', reply);
         } else {
-            addMessageToChat('bot', '검색 결과가 없습니다.');
+            addMessageToChat('bot', '원하시는 정보를 찾지 못했습니다.');
         }
     })
     .catch(error => {

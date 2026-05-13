@@ -16,13 +16,27 @@
         </header>
 
         <main>
-            <nav class="tab-menu">
-                <button class="tab-link active" onclick="openTab(event, 'Map')">근처 편의점 찾기</button>
-                <button class="tab-link" onclick="openTab(event, 'Chatbot')">AI 챗봇</button>
+            <!-- 탭 메뉴는 숨김 처리 (챗봇 연동 시에만 사용) -->
+            <nav class="tab-menu" style="display: none;">
+                <button class="tab-link" onclick="openTab(event, 'Map')">근처 편의점 찾기</button>
+                <button class="tab-link active" onclick="openTab(event, 'Chatbot')">AI 챗봇</button>
             </nav>
 
-            <!-- 근처 편의점 찾기 -->
-            <div id="Map" class="tab-content" style="display: block;">
+            <!-- AI 챗봇 (기본 화면) -->
+            <div id="Chatbot" class="tab-content" style="display: block;">
+                <div class="chat-container">
+                    <div class="chat-window">
+                        <div class="chat-message bot-message">안녕하세요! 원하는 상품을 검색하면 최적의 구매 방법을 찾아드릴게요.</div>
+                    </div>
+                    <div class="chat-input">
+                        <input type="text" id="chatInput" placeholder="상품명을 입력하세요 (예: 오레오씬즈화이트)">
+                        <button id="chatSendButton">전송</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 근처 편의점 찾기 (초기 숨김) -->
+            <div id="Map" class="tab-content" style="display: none;">
                 <p
                     style="text-align: center; color: #007bff; margin-bottom: 15px; font-size: 0.95em; font-weight: bold; background-color: #e9f2ff; padding: 10px; border-radius: 8px;">
                     📍 위치를 자세히 확인하려면 편의점을 클릭해 보세요!
@@ -43,19 +57,7 @@
                 </div>
             </div>
 
-            <!-- AI 챗봇 -->
-            <div id="Chatbot" class="tab-content">
-                <div class="chat-container">
-                    <div class="chat-window">
-                        <div class="chat-message bot-message">안녕하세요! 원하는 상품을 검색하면 최적의 구매 방법을 찾아드릴게요.</div>
-                    </div>
-                    <div class="chat-input">
-                        <input type="text" id="chatInput" placeholder="상품명을 입력하세요 (예: 오레오씬즈화이트)">
-                        <button id="chatSendButton">전송</button>
-                    </div>
-                </div>
 
-            </div>
         </main>
 
         <!-- 지도 모달 -->
