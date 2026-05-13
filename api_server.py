@@ -111,7 +111,7 @@ async def on_fetch(request, env):
     headers = {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Allow-Headers": "*",
     }
     
     if method == "OPTIONS":

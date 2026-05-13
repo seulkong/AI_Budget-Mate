@@ -231,8 +231,7 @@ function sendMessage() {
     fetch(serverUrl, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
-            'Bypass-Tunnel-Reminder': 'true'
+            'Content-Type': 'application/json'
         },
         body: JSON.stringify({ 
             item_name: messageText,
