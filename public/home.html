@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>홈 - Young-AI 파트너</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="home-body">
+    <div class="home-container">
+        <header>
+            <h1><span id="homeUserName"></span>님, 환영합니다!</h1>
+            <button id="logoutButton" class="logout-btn">정보 초기화</button>
+        </header>
+
+        <main>
+            <nav class="tab-menu">
+                <button class="tab-link active" onclick="openTab(event, 'Map')">근처 편의점 찾기</button>
+                <button class="tab-link" onclick="openTab(event, 'Chatbot')">AI 챗봇</button>
+            </nav>
+
+            <!-- 근처 편의점 찾기 -->
+            <div id="Map" class="tab-content" style="display: block;">
+                <p
+                    style="text-align: center; color: #007bff; margin-bottom: 15px; font-size: 0.95em; font-weight: bold; background-color: #e9f2ff; padding: 10px; border-radius: 8px;">
+                    📍 위치를 자세히 확인하려면 편의점을 클릭해 보세요!
+                </p>
+                <div class="map-layout">
+                    <div class="store-list-container">
+                        <div class="store-column">
+                            <h3>GS25 (가까운 순)</h3>
+                            <ul id="gs25-list">
+                            </ul>
+                        </div>
+                        <div class="store-column">
+                            <h3>CU (가까운 순)</h3>
+                            <ul id="cu-list">
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI 챗봇 -->
+            <div id="Chatbot" class="tab-content">
+                <div class="chat-container">
+                    <div class="chat-window">
+                        <div class="chat-message bot-message">안녕하세요! 원하는 상품을 검색하면 최적의 구매 방법을 찾아드릴게요.</div>
+                    </div>
+                    <div class="chat-input">
+                        <input type="text" id="chatInput" placeholder="상품명을 입력하세요 (예: 오레오씬즈화이트)">
+                        <button id="chatSendButton">전송</button>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- 지도 모달 -->
+        <div id="mapModal" class="map-modal">
+            <div class="map-modal-content">
+                <div class="map-modal-header">
+                    <h2 id="mapModalTitle">편의점 위치</h2>
+                    <button class="close-modal" onclick="closeMapModal()">&times;</button>
+                </div>
+                <div id="modal-map-view" class="modal-map-view"></div>
+            </div>
+        </div>
+
+    </div>
+    <script src="js/main.js" charset="utf-8"></script>
+</body>
+
+</html>

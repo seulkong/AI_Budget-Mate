@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>설문조사 - Young-AI 파트너</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <h2>맞춤형 추천을 위한 설문</h2>
+        <form id="surveyForm">
+            <div class="survey-question">
+                <p>현재 <span id="userName"></span>님이 자주 사용하는 편의점은 어디인가요?</p>
+                <label><input type="radio" name="store" value="GS25" required> GS25</label>
+                <label><input type="radio" name="store" value="CU" required> CU</label>
+            </div>
+            <div class="survey-question">
+                <p>현재 <span id="userName2"></span>님이 사용하시는 통신사는 어디인가요?</p>
+                <label><input type="radio" name="carrier" value="KT" required> KT</label>
+                <label><input type="radio" name="carrier" value="LG U+" required> LG U+</label>
+                <label><input type="radio" name="carrier" value="SKT" required> SKT</label>
+                <label><input type="radio" name="carrier" value="none" required> 해당 없음</label>
+            </div>
+            <div class="survey-question">
+                <p>통신사 멤버십 등급은 어떻게 되시나요? </p>
+                <label><input type="radio" name="carrier_tier" value="high" required> VIP / VVIP / Gold</label>
+                <label><input type="radio" name="carrier_tier" value="low" required> 일반 / Silver</label>
+                <label><input type="radio" name="carrier_tier" value="none" required> 해당 없음</label>
+            </div>
+            <div class="survey-question">
+                <p>주로 결제할 때 사용하시는 카드를 알려주세요.</p>
+                <select id="cardIssuer" required style="padding: 5px; margin-bottom: 10px; width: 100%;">
+                    <option value="">카드사 선택</option>
+                    <option value="none">없음 / 해당 카드 없음</option>
+                    <option value="신한카드">신한카드</option>
+                    <option value="KB국민카드">KB국민카드</option>
+                    <option value="삼성카드">삼성카드</option>
+                    <option value="현대카드">현대카드</option>
+                    <option value="롯데카드">롯데카드</option>
+                    <option value="우리카드">우리카드</option>
+                    <option value="하나카드">하나카드</option>
+                    <option value="카카오뱅크">카카오뱅크</option>
+                    <option value="NH농협카드">NH농협카드</option>
+                    <option value="GS리테일">GSPOP카드</option>
+                </select>
+                <br>
+                <select id="cardName" style="padding: 5px; width: 100%; display: none;">
+                    <option value="">카드 선택</option>
+                </select>
+            </div>
+            <button type="submit">제출하고 시작하기</button>
+        </form>
+    </div>
+    <script src="js/survey.js" charset="utf-8"></script>
+</body>
+
+</html>

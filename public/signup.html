@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>프로필 설정 - Young-AI 파트너</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>반가워요! 어떻게 불러드릴까요?</h2>
+        <form id="signupForm">
+            <input type="text" id="name" placeholder="이름을 입력해주세요" required>
+            <select id="consumptionStyle" required style="padding: 10px; margin-bottom: 15px; width: 100%; border: 1px solid #ccc; border-radius: 4px;">
+                <option value="">나의 소비 스타일은?</option>
+                <option value="health">🥗 헬시 플레저 (Healthy Pleasure) (단백질 듬뿍, 제로 슈거! 건강한 간식이 필요해요)</option>
+                <option value="dessert">🍰 디저트 러버 (스트레스 풀리는 달달한 편의점 디저트가 최고예요)</option>
+                <option value="brand">🏪 브랜드 선호 (제가 좋아하는 편의점 위주로 갈래요!)</option>
+                <option value="trend">🔥 신상/트렌드 추구 (요즘 핫한 신상품을 제일 먼저 먹어볼래요!)</option>
+            </select>
+
+            <button type="submit">시작하기</button>
+        </form>
+        <p id="signupMessage" class="error-message"></p>
+    </div>
+    <script src="js/auth.js?v=2"></script>
+</body>
+</html>

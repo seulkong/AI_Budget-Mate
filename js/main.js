@@ -26,12 +26,13 @@ function getUserLocation() {
             },
             (error) => {
                 console.error("위치 정보를 가져오는 데 실패했습니다.", error);
+                alert("현재 위치를 가져올 수 없어 기본 위치(종로구)로 설정합니다. 브라우저의 위치 권한 설정을 확인해 주세요!");
                 // 권한 거부 등 실패 시 기본 위치(종로구) 사용
                 fetchNearbyStores(37.5700, 126.9796);
             },
             {
                 enableHighAccuracy: true,
-                timeout: 10000,
+                timeout: 15000, // 시간을 15초로 늘림
                 maximumAge: 0
             }
         );
