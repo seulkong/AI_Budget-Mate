@@ -225,7 +225,12 @@ function sendMessage() {
 
     // 사용자 정보 가져오기 (설문조사 결과)
     const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
-    // 백엔드 API에 요청 보내기 (API_BASE_URL은 auth.js 등에 선언되어 있음, 없으면 하드코딩)
+    if (!loggedInUser) {
+        alert("사용자 정보가 없습니다. 다시 시작해 주세요!");
+        window.location.href = 'index.html';
+        return;
+    }
+
     const serverUrl = 'https://ai-budget-mate-api.cana1222.workers.dev/search'; // Cloudflare Workers 주소
     
     fetch(serverUrl, {
@@ -235,14 +240,17 @@ function sendMessage() {
         },
         body: JSON.stringify({ 
             item_name: messageText,
-            user_style: loggedInUser.style,
-            user_store: loggedInUser.store,
-            user_telecom: loggedInUser.carrier,
-            user_telecom_tier: loggedInUser.carrier_tier,
-            user_card: loggedInUser.card
+            user_style: loggedInUser.style || 'health',
+            user_store: loggedInUser.store || 'GS25',
+            user_telecom: loggedInUser.carrier || 'none',
+            user_telecom_tier: loggedInUser.carrier_tier || 'none',
+            user_card: loggedInUser.card || 'none'
         }),
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) throw new Error('서버 응답 오류: ' + response.status);
+        return response.json();
+    })
     .then(data => {
         // 이전에 표시된 '로딩 메시지'를 찾아 제거
         const chatWindow = document.querySelector('.chat-window');
@@ -323,6 +331,7 @@ function sendMessage() {
     })
     .catch(error => {
         console.error('Error:', error);
+        alert('서버 연결 실패: ' + error.message);
         addMessageToChat('bot', '앗, 잠시 정보를 불러오는 데 문제가 생겼어요. 네트워크 연결을 확인하시고 1~2분 뒤에 다시 시도해 주세요!');
     });
 }
