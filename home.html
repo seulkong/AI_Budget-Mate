@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>홈 - Young-AI 파트너</title>
     <link rel="stylesheet" href="css/style.css">
-    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=af9ca96057244088973c43903647c16b&libraries=services,clusterer,drawing"></script>
 </head>
+
 <body class="home-body">
     <div class="home-container">
         <header>
@@ -23,28 +24,15 @@
             <!-- 근처 편의점 찾기 -->
             <div id="Map" class="tab-content" style="display: block;">
                 <div class="map-layout">
-                    <div id="map-view" class="map-view">
-                        <!-- 카카오맵이 여기에 표시됩니다. -->
-                    </div>
                     <div class="store-list-container">
                         <div class="store-column">
                             <h3>GS25 (가까운 순)</h3>
                             <ul id="gs25-list">
-                                <!-- 예시 데이터 -->
-                                <li>GS25 수원대점 (150m)</li>
-                                <li>GS25 와우리점 (320m)</li>
-                                <li>GS25 봉담와우점 (550m)</li>
-                                <li>GS25 봉담쌍용점 (800m)</li>
                             </ul>
                         </div>
                         <div class="store-column">
                             <h3>CU (가까운 순)</h3>
                             <ul id="cu-list">
-                                <!-- 예시 데이터 -->
-                                <li>CU 수원대정문점 (180m)</li>
-                                <li>CU 와우A플러스점 (410m)</li>
-                                <li>CU 봉담드림점 (620m)</li>
-                                <li>CU 봉담효행점 (950m)</li>
                             </ul>
                         </div>
                     </div>
@@ -62,9 +50,20 @@
                         <button id="chatSendButton">전송</button>
                     </div>
                 </div>
-            </div>
+
+                <!-- 지도 모달 -->
+                <div id="mapModal" class="map-modal">
+                    <div class="map-modal-content">
+                        <div class="map-modal-header">
+                            <h2 id="mapModalTitle">편의점 위치</h2>
+                            <button class="close-modal" onclick="closeMapModal()">&times;</button>
+                        </div>
+                        <div id="modal-map-view" class="modal-map-view"></div>
+                    </div>
+                </div>
         </main>
     </div>
-    <script src="js/main.js"></script>
+    <script src="js/main.js?v=2"></script>
 </body>
+
 </html>

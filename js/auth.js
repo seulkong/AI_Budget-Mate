@@ -1,6 +1,8 @@
+const API_BASE_URL = 'https://time-2xjx.onrender.com'; // 배포 시 'https://time-2xjx.onrender.com' 로 변경
 document.addEventListener('DOMContentLoaded', () => {
     // 로그인 상태 확인 후 home.html로 리디렉션
-    if (window.location.pathname.endsWith('index.html') || window.location.pathname.endsWith('signup.html')) {
+    const pathname = window.location.pathname;
+    if (pathname.endsWith('index.html') || pathname.endsWith('signup.html') || pathname.endsWith('login.html') || pathname.endsWith('/')) {
         const loggedInUser = localStorage.getItem('loggedInUser');
         if (loggedInUser) {
             window.location.href = 'home.html';
@@ -11,11 +13,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (signupForm) {
         signupForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const name = document.getElementById('name').value;
-            const phone = document.getElementById('phone').value;
-            const id = document.getElementById('signupId').value;
-            const password = document.getElementById('signupPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
+            const name = document.getElementById('name').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const id = document.getElementById('signupId').value.trim();
+            const password = document.getElementById('signupPassword').value.trim();
+            const confirmPassword = document.getElementById('confirmPassword').value.trim();
             const messageEl = document.getElementById('signupMessage');
 
             if (password !== confirmPassword) {
@@ -23,19 +25,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // 실제로는 서버로 보내야 함. 여기서는 localStorage 사용.
-            const users = JSON.parse(localStorage.getItem('users')) || {};
-            if (users[id]) {
-                messageEl.textContent = '이미 존재하는 ID입니다.';
-                return;
-            }
-
-            users[id] = { name, phone, password };
-            localStorage.setItem('users', JSON.stringify(users));
-            
-            // 회원가입 성공 시, 임시로 사용자 이름 저장 후 설문조사로 이동
-            localStorage.setItem('tempUser', name);
-            window.location.href = 'survey.html';
+            fetch(`${API_BASE_URL}/api/signup`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, name, phone, password })
+            })
+            .then(res => res.json().then(data => ({ status: res.status, body: data })))
+            .then(data => {
+                if (data.status === 201) {
+                    localStorage.setItem('tempUser', name);
+                    localStorage.setItem('tempUserId', id);
+                    window.location.href = 'survey.html';
+                } else {
+                    messageEl.textContent = data.body.error || '회원가입에 실패했습니다.';
+                }
+            })
+            .catch(err => {
+                console.error('Signup error:', err);
+                messageEl.textContent = '서버와 통신할 수 없습니다.';
+            });
         });
     }
 
@@ -43,18 +51,28 @@ document.addEventListener('DOMContentLoaded', () => {
     if (loginForm) {
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const id = document.getElementById('loginId').value;
-            const password = document.getElementById('loginPassword').value;
+            const id = document.getElementById('loginId').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
             const messageEl = document.getElementById('loginMessage');
 
-            const users = JSON.parse(localStorage.getItem('users')) || {};
-            if (users[id] && users[id].password === password) {
-                // 로그인 성공
-                localStorage.setItem('loggedInUser', JSON.stringify({ id: id, name: users[id].name }));
-                window.location.href = 'home.html';
-            } else {
-                messageEl.textContent = 'ID 또는 비밀번호가 올바르지 않습니다.';
-            }
+            fetch(`${API_BASE_URL}/api/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, password })
+            })
+            .then(res => res.json().then(data => ({ status: res.status, body: data })))
+            .then(data => {
+                if (data.status === 200) {
+                    localStorage.setItem('loggedInUser', JSON.stringify(data.body.user));
+                    window.location.href = 'home.html';
+                } else {
+                    messageEl.textContent = data.body.error || 'ID 또는 비밀번호가 올바르지 않습니다.';
+                }
+            })
+            .catch(err => {
+                console.error('Login error:', err);
+                messageEl.textContent = '서버와 통신할 수 없습니다.';
+            });
         });
     }
 });

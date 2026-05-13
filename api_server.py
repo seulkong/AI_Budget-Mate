@@ -6,6 +6,8 @@ import os
 import sys
 import re
 import requests
+import sqlite3
+import hashlib
 # pyrefly: ignore [missing-import]
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -30,12 +32,35 @@ app = Flask(__name__)
 CORS(app)
 
 KAKAO_KEY = "28927acb4f3229bf2bddf11261cc6ff3"
+DB_PATH = os.path.join(os.path.dirname(__file__), 'users.db')
 
 # --- 전역 변수 선언 ---
 crawling_data = []
 card_df = pd.DataFrame()
 telecom_df = pd.DataFrame()
 # --------------------
+
+def init_db():
+    """SQLite 데이터베이스 초기화 및 테이블 생성"""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            phone TEXT NOT NULL,
+            password TEXT NOT NULL,
+            store TEXT,
+            carrier TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
+    print("✅ 데이터베이스 초기화 완료")
+
+def hash_password(password):
+    """비밀번호 해싱 (간단한 SHA-256)"""
+    return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
 def load_data():
     """모든 데이터 소스를 로드하여 전역 변수를 업데이트하는 함수"""
@@ -86,6 +111,7 @@ def run_crawling_and_save():
 
 # --- 서버 시작 시 데이터 로드 및 스케줄러 설정 ---
 # Gunicorn이 앱을 임포트할 때 이 코드가 실행됩니다.
+init_db() # 데이터베이스 테이블 생성
 load_data() # 서버 시작 시 데이터 즉시 로드
 
 scheduler = BackgroundScheduler(daemon=True)
@@ -265,18 +291,122 @@ def find_best_deal(item_name, user_store, user_telecom):
             
     return results
 
+@app.route('/api/signup', methods=['POST'])
+def signup():
+    """회원가입 API"""
+    try:
+        data = request.json
+        user_id = data.get('id')
+        name = data.get('name')
+        phone = data.get('phone')
+        password = data.get('password')
+
+        if not all([user_id, name, phone, password]):
+            return jsonify({"error": "모든 필드를 입력해주세요."}), 400
+
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # ID 중복 확인
+        cursor.execute("SELECT id FROM users WHERE id = ?", (user_id,))
+        if cursor.fetchone():
+            conn.close()
+            return jsonify({"error": "이미 존재하는 ID입니다."}), 409
+
+        # 유저 추가
+        hashed_pw = hash_password(password)
+        cursor.execute(
+            "INSERT INTO users (id, name, phone, password) VALUES (?, ?, ?, ?)",
+            (user_id, name, phone, hashed_pw)
+        )
+        conn.commit()
+        conn.close()
+        return jsonify({"message": "회원가입이 완료되었습니다."}), 201
+
+    except Exception as e:
+        print(f"Signup error: {e}")
+        return jsonify({"error": "서버 오류가 발생했습니다."}), 500
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    """로그인 API"""
+    try:
+        data = request.json
+        user_id = data.get('id')
+        password = data.get('password')
+
+        if not user_id or not password:
+            return jsonify({"error": "ID와 비밀번호를 모두 입력해주세요."}), 400
+
+        hashed_pw = hash_password(password)
+        
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, name FROM users WHERE id = ? AND password = ?", (user_id, hashed_pw))
+        user = cursor.fetchone()
+        conn.close()
+
+        if user:
+            return jsonify({"message": "로그인 성공", "user": {"id": user[0], "name": user[1]}}), 200
+        else:
+            return jsonify({"error": "ID 또는 비밀번호가 올바르지 않습니다."}), 401
+
+    except Exception as e:
+        print(f"Login error: {e}")
+        return jsonify({"error": "서버 오류가 발생했습니다."}), 500
+
+@app.route('/api/survey', methods=['POST'])
+def survey():
+    """설문조사 결과 저장 API"""
+    try:
+        data = request.json
+        user_id = data.get('id')
+        store = data.get('store')
+        carrier = data.get('carrier')
+
+        if not all([user_id, store, carrier]):
+            return jsonify({"error": "필수 정보가 누락되었습니다."}), 400
+
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("UPDATE users SET store = ?, carrier = ? WHERE id = ?", (store, carrier, user_id))
+        
+        if cursor.rowcount == 0:
+            conn.close()
+            return jsonify({"error": "존재하지 않는 사용자입니다."}), 404
+            
+        conn.commit()
+        conn.close()
+        return jsonify({"message": "설문조사가 저장되었습니다."}), 200
+
+    except Exception as e:
+        print(f"Survey error: {e}")
+        return jsonify({"error": "서버 오류가 발생했습니다."}), 500
+
 @app.route('/search', methods=['POST'])
 def search():
     """챗봇 요청을 받아 처리하는 API 엔드포인트"""
     try:
         data = request.json
         item_name = data.get('item_name')
-        user_info = data.get('user_info', {})
-        user_store = user_info.get('store')
-        user_telecom = user_info.get('carrier')
+        user_id = data.get('user_id')
 
         if not item_name:
             return jsonify({"error": "상품명을 입력해주세요."}), 400
+        
+        user_store = None
+        user_telecom = None
+
+        if user_id:
+            conn = sqlite3.connect(DB_PATH)
+            cursor = conn.cursor()
+            cursor.execute("SELECT store, carrier FROM users WHERE id = ?", (user_id,))
+            user_info = cursor.fetchone()
+            conn.close()
+            
+            if user_info:
+                user_store = user_info[0]
+                user_telecom = user_info[1]
         
         result = calculate_best_price(item_name, user_store, user_telecom)
         return jsonify(result)

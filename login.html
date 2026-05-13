@@ -93,22 +93,6 @@
         <p id="loginMessage" class="error-message"></p>
     </div>
 
-    <script>
-        document.getElementById('loginForm').addEventListener('submit', function (e) {
-            e.preventDefault();
-            const id = document.getElementById('loginId').value;
-            const password = document.getElementById('loginPassword').value;
-
-            const users = JSON.parse(localStorage.getItem('users')) || {};
-            if (users[id] && users[id].password === password) {
-                // 로그인 성공
-                localStorage.setItem('loggedInUser', JSON.stringify({ id: id, name: users[id].name }));
-                window.location.href = 'home.html';
-            } else {
-                // 로그인 실패
-                document.getElementById('loginMessage').textContent = '아이디 또는 비밀번호가 올바르지 않습니다.';
-            }
-        });
-    </script>
+    <script src="js/auth.js?v=2"></script>
 </body>
 </html>
