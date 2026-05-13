@@ -1,0 +1,22 @@
+name = "ai-budget-mate-api"
+main = "api_server.py"
+compatibility_date = "2024-04-03"
+compatibility_flags = ["python_workers"]
+
+# 파이썬 지원 활성화
+[python]
+
+# D1 데이터베이스 설정 (회원 정보용)
+[[d1_databases]]
+binding = "DB"
+database_name = "users_db"
+database_id = "76c718a2-8ca2-44f4-ac9a-fbff05f97721"
+
+# KV 저장소 설정 (크롤링 데이터용)
+[[kv_namespaces]]
+binding = "CRAWLING_KV"
+id = "324ca4cce7424048b323c5d33712b0d7"
+
+# 크론 트리거 (6시간마다 크롤링 실행)
+[triggers]
+crons = ["0 */6 * * *"]

@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://ai-budget-mate.onrender.com'; // Render 서버 주소
+const API_BASE_URL = 'https://ai-budget-mate-api.cana1222.workers.dev'; // Cloudflare Workers 주소
 document.addEventListener('DOMContentLoaded', () => {
     // 로그인 상태 확인 후 home.html로 리디렉션
     const pathname = window.location.pathname;

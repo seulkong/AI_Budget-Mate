@@ -1,0 +1,10 @@
+.venv/
+.git/
+__pycache__/
+*.pyc
+users.db
+crawling_result.json
+AI_Budget-Mate/
+geo/
+node_modules/
+.DS_Store

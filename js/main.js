@@ -225,7 +225,7 @@ function sendMessage() {
     // 사용자 정보 가져오기 (설문조사 결과)
     const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
     // 백엔드 API에 요청 보내기 (API_BASE_URL은 auth.js 등에 선언되어 있음, 없으면 하드코딩)
-    const serverUrl = 'https://ai-budget-mate.onrender.com/search'; // Render 서버 주소
+    const serverUrl = 'https://ai-budget-mate-api.cana1222.workers.dev/search'; // Cloudflare Workers 주소
     
     fetch(serverUrl, {
         method: 'POST',

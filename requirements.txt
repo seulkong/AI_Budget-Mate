@@ -1,7 +1,1 @@
-Flask
-pandas
-Flask-Cors
-apscheduler
-gunicorn
-beautifulsoup4
-requests
+# Cloudflare Workers Python 환경에서는 표준 라이브러리를 사용하므로 별도의 패키지 설치가 필요 없습니다.
